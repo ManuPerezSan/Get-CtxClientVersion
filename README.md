@@ -13,7 +13,7 @@ Connect to remote XenDesktop farm (CVAD) to obtain data about Client Receiver ve
 
 ## Return (output)
     Return data in json format (data can be imported in influxDB)
-    ![Output](/images/Output_Get-CtxClientVersions.png)
+    ![Output](https://github.com/ManuPerezSan/Get-CtxClientVersion/blob/master/Images/Output_Get-CtxClientVersions.png)
 
 ## Grafana
     ![Grafana](/images/Grafana_Get-CtxClientVersions.png)
