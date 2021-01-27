@@ -29,52 +29,61 @@ Param(
 )
 
 $clientVersions = @()
+$Farms = @()
 
 Foreach($ddc in $DdcServers){
 
     $s01 = New-PsSession -Computer $ddc -Credential $Credential
 
-    try{
+    $siteName = Invoke-command -Session $s01 -ScriptBlock{ (Get-BrokerSite).Name }
+
+    if ($Farms.IndexOf($siteName) -lt 0) {
+    
+        $Farms += $siteName
         
-        $returnedData = Invoke-command -Session $s01 -ScriptBlock{
+        try{
 
-            $array=@()
+            $returnedData = Invoke-command -Session $s01 -ScriptBlock{
 
-            Add-PSSnapin citrix.*
-            $sessions = Get-BrokerSession -AdminAddress localhost
-            
-            foreach ($i in ($sessions| group ClientVersion)){ 
-              
-              if ($i.Name -eq ""){
-                $version = '-'
-              }else{
-                $version = $i.Name
-              }
+                $array=@()
 
-              $Object = New-Object PSObject
-              $Statistics = New-Object PSObject
+                Add-PSSnapin citrix.*
+                $sessions = Get-BrokerSession -AdminAddress localhost
 
-              $Statistics | add-member Noteproperty UsedReceiverVersion_Qty $i.count
+                foreach ($i in ($sessions| group ClientVersion)){ 
 
-              $Object | add-member Noteproperty ReceiverVersion $version
-              $Object | add-member Noteproperty Statistics $Statistics                
+                  if ($i.Name -eq ""){
+                    $version = '-'
+                  }else{
+                    $version = $i.Name
+                  }
 
-              $array += $Object
+                  $Object = New-Object PSObject
+                  $Statistics = New-Object PSObject
 
-              
-            }
-            
-            return $array
+                  $Statistics | add-member Noteproperty UsedReceiverVersion_Qty $i.count
 
-        } | Select -Property ReceiverVersion,Statistics
+                  $Object | add-member Noteproperty ReceiverVersion $version
+                  $Object | add-member Noteproperty Statistics $Statistics                
 
-    }catch{
-        Remove-PSSession $s01 -Confirm:$false
+                  $array += $Object
+
+
+                }
+
+                return $array
+
+            } | Select -Property ReceiverVersion,Statistics
+
+        }catch{
+            Remove-PSSession $s01 -Confirm:$false
+        }
+        
+        $clientVersions += $returnedData
+        
     }
-
+    
     Remove-PSSession $s01 -Confirm:$false
-
-    $clientVersions += $returnedData
 
 }
 
